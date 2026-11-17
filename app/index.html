@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Displays the site properly based on the user's device width -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Join 60,000+ product managers receiving monthly updates. Sign up for our newsletter." />
+
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/images/favicon-32x32.png" />
+  <title>Frontend Mentor | Newsletter sign-up form with success message</title>
+
+  <!-- Load the regular font early so text doesn't flash in a fallback font -->
+  <link rel="preload" href="./assets/fonts/Roboto-Regular.ttf" as="font" type="font/ttf" crossorigin />
+  <link rel="stylesheet" href="./style.css" />
+  <!-- "defer" runs the script after the HTML has been read, so every element already exists -->
+  <script src="./script.js" defer></script>
+</head>
+
+<body>
+  <main class="page">
+
+    <!-- ===================== SIGN-UP FORM START ===================== -->
+    <section class="card signup" id="signup" aria-labelledby="signup-title">
+
+      <!-- Illustration: mobile image by default, desktop image from 960px wide.
+           alt="" because it is decorative and screen readers should skip it. -->
+      <picture class="signup__illustration">
+        <source media="(min-width: 60em)" srcset="./assets/images/illustration-sign-up-desktop.svg" />
+        <img src="./assets/images/illustration-sign-up-mobile.svg" alt="" width="375" height="284" />
+      </picture>
+
+      <div class="signup__content">
+        <h1 class="heading" id="signup-title">Stay updated!</h1>
+
+        <p>Join 60,000+ product managers receiving monthly updates on:</p>
+
+        <ul class="benefits" role="list">
+          <li>Product discovery and building what matters</li>
+          <li>Measuring to ensure updates are a success</li>
+          <li>And much more!</li>
+        </ul>
+
+        <!-- novalidate turns off the browser's own error bubbles so our designed messages are used -->
+        <form class="form" id="signup-form" novalidate>
+          <div class="form__field">
+            <div class="form__label-row">
+              <label class="form__label" for="email">Email address</label>
+              <!-- Error text is injected here by script.js; aria-live announces it to screen readers -->
+              <span class="form__error" id="email-error" aria-live="polite"></span>
+            </div>
+
+            <input
+              class="form__input"
+              type="email"
+              id="email"
+              name="email"
+              placeholder="email@company.com"
+              autocomplete="email"
+              required
+              aria-required="true"
+              aria-invalid="false"
+              aria-describedby="email-error"
+            />
+          </div>
+
+          <button class="btn" type="submit">Subscribe to monthly newsletter</button>
+        </form>
+      </div>
+    </section>
+    <!-- ===================== SIGN-UP FORM END ===================== -->
+
+    <!-- ===================== SUCCESS MESSAGE START ===================== -->
+    <!-- "hidden" keeps this out of view (and away from screen readers) until the form is valid -->
+    <section class="card success" id="success" aria-labelledby="success-title" hidden>
+      <div class="success__body">
+        <img class="success__icon" src="./assets/images/icon-success.svg" alt="" width="64" height="64" />
+
+        <!-- tabindex="-1" lets script.js move focus here so the message is announced -->
+        <h2 class="heading" id="success-title" tabindex="-1">Thanks for subscribing!</h2>
+
+        <p>
+          A confirmation email has been sent to
+          <strong id="success-email">ash@loremcompany.com</strong>.
+          Please open it and click the button inside to confirm your subscription.
+        </p>
+      </div>
+
+      <button class="btn" type="button" id="dismiss-btn">Dismiss message</button>
+    </section>
+    <!-- ===================== SUCCESS MESSAGE END ===================== -->
+
+  </main>
+</body>
+</html>

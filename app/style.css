@@ -1,0 +1,378 @@
+/* ==========================================================================
+   Newsletter sign-up form with success message
+   Mobile-first: base styles are for phones (375px design), and the media
+   queries at the bottom adapt the layout for tablets and desktops (1440px design).
+   ========================================================================== */
+
+/* ---------- 1. Fonts (local files from /assets/fonts) ---------- */
+@font-face {
+  font-family: "Roboto";
+  src: url("./assets/fonts/Roboto-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Roboto";
+  src: url("./assets/fonts/Roboto-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------- 2. Design tokens (from style-guide.md) ---------- */
+:root {
+  /* Colours */
+  --tomato: hsl(4, 100%, 67%);
+  --tomato-tint: hsla(4, 100%, 67%, 0.15);
+  --dark-slate-grey: hsl(234, 29%, 20%);
+  --charcoal-grey: hsl(235, 18%, 26%);
+  --grey: hsl(231, 7%, 60%);
+  --grey-border: hsla(231, 7%, 60%, 0.5);
+  --white: hsl(0, 0%, 100%);
+
+  /* Gradient used on button hover and the success icon */
+  --gradient-cta: linear-gradient(90deg, #ff527b 0%, #ff6a3a 100%);
+
+  /* Typography */
+  --font-family: "Roboto", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --fs-body: 1rem;        /* 16px */
+  --fs-small: 0.75rem;    /* 12px */
+  --fs-heading-sm: 2.5rem;  /* 40px - mobile heading */
+  --fs-heading-lg: 3.5rem;  /* 56px - desktop heading */
+
+  /* Shapes and motion */
+  --radius-sm: 0.5rem;    /* 8px  - inputs and buttons */
+  --radius-lg: 2.25rem;   /* 36px - cards */
+  --shadow-card: 0 15px 60px hsla(0, 0%, 0%, 0.25);
+  --shadow-cta: 0 16px 32px hsla(4, 100%, 67%, 0.5);
+  --transition: 250ms ease;
+}
+
+/* ---------- 3. Reset (removes browser differences) ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+img,
+picture {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button {
+  font: inherit;          /* form controls don't inherit fonts by default */
+  color: inherit;
+}
+
+/* The [hidden] attribute must always hide, even if a rule sets display */
+[hidden] {
+  display: none !important;
+}
+
+/* ---------- 4. Base ---------- */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;     /* handles mobile browser toolbars where supported */
+  font-family: var(--font-family);
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  color: var(--dark-slate-grey);
+  background-color: var(--white);   /* mobile: the card fills the screen */
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.card {
+  width: 100%;
+  background-color: var(--white);
+}
+
+.heading {
+  font-size: var(--fs-heading-sm);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--dark-slate-grey);
+}
+
+/* Optical alignment: the mobile designs place both headings 1px lower */
+.heading {
+  position: relative;
+  top: 1px;
+}
+
+/* ---------- 5. Sign-up card ---------- */
+.signup {
+  display: flex;
+  flex-direction: column;
+}
+
+.signup__illustration img {
+  width: 100%;
+  height: auto;
+}
+
+.signup__content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2.5rem 1.5rem;
+}
+
+/* Benefits list with the provided tick icon */
+.benefits {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.benefits li {
+  padding-left: 2.3125rem;   /* 21px icon + 16px space = 37px, as in the design */
+  background: url("./assets/images/icon-list.svg") no-repeat left 1px / 1.3125rem;
+}
+
+/* ---------- 6. Form ---------- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1rem;       /* 24px gap + 16px = 40px space above the form, as in the design */
+}
+
+.form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form__label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  font-size: var(--fs-small);
+  font-weight: 700;
+}
+
+.form__error {
+  color: var(--tomato);
+  text-align: right;
+}
+
+.form__input {
+  width: 100%;
+  height: 3.5rem;
+  padding: 0 1.4375rem;      /* 23px + 1px border = text starts 24px in, as in the design */
+  border: 1px solid var(--grey-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--white);
+  color: var(--dark-slate-grey);
+  cursor: pointer;
+  transition: border-color var(--transition), background-color var(--transition),
+    box-shadow var(--transition);
+  -webkit-appearance: none;   /* removes Safari's inner shadow */
+  appearance: none;
+}
+
+.form__input::placeholder {
+  color: var(--grey);
+  opacity: 1;                 /* Firefox fades placeholders by default */
+}
+
+/* Hover + focus: dark border as in active-states.jpg */
+.form__input:hover,
+.form__input:focus {
+  border-color: var(--dark-slate-grey);
+}
+
+.form__input:focus {
+  outline: none;
+  cursor: text;
+  box-shadow: 0 0 0 1px var(--dark-slate-grey);   /* thicker ring for keyboard visibility */
+}
+
+/* Error state as in error-states.jpg (class added by script.js) */
+.form__input.is-invalid {
+  border-color: var(--tomato);
+  background-color: var(--tomato-tint);
+  color: var(--tomato);
+}
+
+.form__input.is-invalid:focus {
+  box-shadow: 0 0 0 1px var(--tomato);
+}
+
+/* ---------- 7. Button ---------- */
+.btn {
+  position: relative;
+  isolation: isolate;          /* keeps the gradient layer behind the text */
+  overflow: hidden;
+  width: 100%;
+  height: 3.5rem;
+  padding-top: 0.25rem;        /* label sits 2px below centre, as in the design */
+  border: none;
+  border-radius: var(--radius-sm);
+  background-color: var(--dark-slate-grey);
+  color: var(--white);
+  font-weight: 700;
+  cursor: pointer;
+  transition: box-shadow var(--transition);
+}
+
+/* Gradients can't be animated directly, so a gradient layer fades in instead */
+.btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--gradient-cta);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.btn:hover,
+.btn:focus-visible {
+  box-shadow: var(--shadow-cta);
+}
+
+.btn:hover::before,
+.btn:focus-visible::before {
+  opacity: 1;
+}
+
+/* Extra outline only for keyboard users */
+.btn:focus-visible {
+  outline: 2px solid var(--dark-slate-grey);
+  outline-offset: 3px;
+}
+
+/* ---------- 8. Success message ---------- */
+.success {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;   /* mobile: message at the top, button at the bottom */
+  gap: 2.5rem;
+  padding: 9.3125rem 1.5rem 2.5rem; /* 149px top, as in mobile-success.jpg */
+}
+
+.success__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.success__icon {
+  width: 4rem;
+  height: 4rem;
+  margin-bottom: 1rem;       /* 16px + 24px gap = 40px between icon and title */
+}
+
+.success__title:focus,
+#success-title:focus {
+  outline: none;             /* focus is moved here only so screen readers announce it */
+}
+
+.success strong {
+  font-weight: 700;
+  word-break: break-word;    /* very long emails wrap instead of overflowing */
+}
+
+/* ==========================================================================
+   9. Responsive breakpoints
+   ========================================================================== */
+
+/* Tablet (600px+): centred cards on the charcoal background */
+@media (min-width: 37.5em) {
+  body {
+    background-color: var(--charcoal-grey);
+  }
+
+  .page {
+    align-items: center;
+    padding: 2rem 1.5rem;
+  }
+
+  .card {
+    max-width: 31.5rem;            /* 504px, the success card width in the design */
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+  }
+
+  .heading {
+    font-size: var(--fs-heading-lg);
+  }
+
+  .signup {
+    padding: 1.5rem;
+  }
+
+  .signup__illustration img {
+    border-radius: 1rem;
+  }
+
+  .signup__content {
+    padding: 2.5rem 1rem 1rem;
+  }
+
+  .heading {
+    top: 0;
+  }
+
+  .success {
+    padding: 3rem 4rem 4rem;
+  }
+
+}
+
+/* Desktop (960px+): text on the left, illustration on the right */
+@media (min-width: 60em) {
+  .signup {
+    flex-direction: row-reverse;   /* illustration comes first in the HTML, shown on the right */
+    align-items: center;
+    gap: 4rem;
+    max-width: 58rem;              /* 928px, as in desktop-design.jpg */
+    margin-bottom: 1px;            /* card is 641px tall: keeps it on whole pixels (top at 219px) */
+  }
+
+  .signup__illustration {
+    flex-shrink: 0;
+  }
+
+  .signup__illustration img {
+    width: 25rem;                  /* 400 x 593, the desktop illustration's size */
+    border-radius: 0;              /* corners are already rounded inside the SVG */
+  }
+
+  .signup__content {
+    flex: 1;
+    padding: 0 0 0 2.5rem;
+  }
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+  }
+}

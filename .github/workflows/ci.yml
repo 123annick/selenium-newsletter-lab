@@ -1,0 +1,115 @@
+name: Selenium UI Tests
+
+# ── 1. TRIGGERS ────────────────────────────────────────────────────────────
+# Run on every push and every pull request (any branch), plus a manual "Run workflow" button.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'URL to test (leave empty to test the app in this repo, or e.g. https://123annick.github.io/QAM-lab1/)'
+        required: false
+        default: ''
+
+# Cancel an older run of the same branch when a newer commit arrives
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  checks: write          # lets the JUnit report action create a "check" with per-test results
+  pull-requests: write   # lets it comment on PRs
+
+jobs:
+  # ── 2. TEST JOB ──────────────────────────────────────────────────────────
+  test:
+    name: Run Selenium tests (Chrome, headless)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21 (with Maven dependency cache)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven            # caches ~/.m2 so dependencies install faster next time
+
+      - name: Install Google Chrome
+        id: chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: Print tool versions (useful when debugging the log)
+        run: |
+          java -version
+          mvn -v
+          ${{ steps.chrome.outputs.chrome-path }} --version
+
+      - name: Install dependencies and compile tests
+        run: mvn -B -ntp test-compile
+
+      - name: Run tests
+        # -B batch mode (clean logs), -ntp no download progress spam, -e full error details
+        env:
+          BASE_URL: ${{ github.event.inputs.base_url }}   # passed via env (safer than inlining user input)
+        run: mvn -B -ntp -e test -Dheadless=true "-DbaseUrl=$BASE_URL"
+
+      # ── 3. DETAILED REPORTING ─────────────────────────────────────────────
+      - name: Publish test report (job summary + check)
+        if: always()
+        uses: mikepenz/action-junit-report@v5
+        with:
+          report_paths: 'target/surefire-reports/TEST-*.xml'
+          detailed_summary: true
+          include_passed: true
+          check_name: Selenium test results
+
+      - name: Upload Surefire reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: target/surefire-reports/
+          retention-days: 14
+
+      - name: Upload failure screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-screenshots
+          path: target/screenshots/
+          if-no-files-found: ignore
+
+  # ── 4. NOTIFICATION JOB ──────────────────────────────────────────────────
+  notify:
+    name: Notify Slack
+    needs: test
+    if: always()               # run whether tests passed or failed
+    runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    steps:
+      - name: Skip notice (no webhook configured)
+        if: env.SLACK_WEBHOOK_URL == ''
+        run: echo "::notice::SLACK_WEBHOOK_URL secret not set – skipping Slack notification."
+
+      - name: Send build status to Slack
+        if: env.SLACK_WEBHOOK_URL != ''
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "${{ needs.test.result == 'success' && ':white_check_mark: PASSED' || ':x: FAILED' }} – Selenium tests on ${{ github.repository }}"
+            blocks:
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "*${{ needs.test.result == 'success' && ':white_check_mark: Build PASSED' || ':x: Build FAILED' }}*\n*Repo:* ${{ github.repository }}\n*Branch:* `${{ github.ref_name }}`\n*Event:* ${{ github.event_name }}\n*Commit:* `${{ github.sha }}` by ${{ github.actor }}\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View run logs & test report>"
