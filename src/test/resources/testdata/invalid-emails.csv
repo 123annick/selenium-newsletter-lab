@@ -1,0 +1,7 @@
+email,reason
+ash#loremcompany.com,# used instead of @
+plainaddress,no @ and no domain
+user@,no domain after @
+user@domain,no top-level domain (.com)
+@nouser.com,nothing before @
+user name@mail.com,contains a space

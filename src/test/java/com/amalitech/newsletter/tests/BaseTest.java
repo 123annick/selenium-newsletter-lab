@@ -11,9 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Common setup/teardown for every UI test.
- * Each test gets a fresh browser (@BeforeEach) that is always closed afterwards (@AfterEach),
- * so tests are independent and can run in any order.
+ * Browser lifecycle shared by every UI test – and nothing else.
+ * Each test gets a fresh browser and it is always closed, so tests are independent and order-free.
  */
 @ExtendWith(ScreenshotOnFailureExtension.class)
 public abstract class BaseTest {
@@ -22,13 +21,13 @@ public abstract class BaseTest {
     protected WebDriver driver;
 
     @BeforeEach
-    void setUp(TestInfo testInfo) {
+    void startBrowser(TestInfo testInfo) {
         log.info("========== START: {} ==========", testInfo.getDisplayName());
         driver = DriverFactory.createDriver();
     }
 
     @AfterEach
-    void tearDown(TestInfo testInfo) {
+    void closeBrowser(TestInfo testInfo) {
         if (driver != null) {
             driver.quit();
         }

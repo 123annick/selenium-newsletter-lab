@@ -3,7 +3,6 @@ package com.amalitech.newsletter.pages;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 
 /**
  * Page Object for the "Thanks for subscribing!" success message.
@@ -29,38 +28,40 @@ public class SuccessPage extends BasePage {
         super(driver);
     }
 
-    /** Explicitly wait for the success card to become visible before using it. */
     public SuccessPage waitUntilLoaded() {
-        wait.until(ExpectedConditions.visibilityOf(successCard));
+        waitUntilVisible(successCard);
         log.info("Success message displayed");
         return this;
     }
+
+    // ---------------------------------------------------------------- user actions
+
+    /** "Dismiss message" returns the user to the sign-up form. */
+    public NewsletterSignupPage dismiss() {
+        log.info("Clicking 'Dismiss message'");
+        click(dismissButton);
+        return new NewsletterSignupPage(driver).waitUntilLoaded();
+    }
+
+    // ---------------------------------------------------------------- page state
 
     public boolean isDisplayed() {
         return isVisible(successCard);
     }
 
     public String getHeading() {
-        return textOf(heading);
+        return visibleText(heading);
     }
 
     public String getMessage() {
-        return textOf(message);
+        return visibleText(message);
     }
 
     public String getConfirmedEmail() {
-        return textOf(confirmedEmail);
+        return visibleText(confirmedEmail);
     }
 
-    /** The app moves focus to the heading so screen readers announce it. */
     public boolean isHeadingFocused() {
-        return heading.equals(driver.switchTo().activeElement());
-    }
-
-    /** Clicking "Dismiss message" takes the user back to the sign-up form. */
-    public NewsletterSignupPage dismiss() {
-        log.info("Clicking 'Dismiss message'");
-        click(dismissButton);
-        return new NewsletterSignupPage(driver).waitUntilLoaded();
+        return hasFocus(heading);
     }
 }

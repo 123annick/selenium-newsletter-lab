@@ -5,16 +5,18 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.util.List;
 
 /**
- * Page Object for the sign-up form of the QAM-lab1 newsletter app.
- * All locators for this page live here – tests never call driver.findElement() directly.
- * Several locator strategies are used on purpose: id, CSS, XPath.
+ * Page Object for the newsletter sign-up form (QAM-lab1).
+ * The only place that knows this page's locators. Different locator strategies are used
+ * where each fits best: id (most stable), CSS (structure), XPath (attribute match).
  */
 public class NewsletterSignupPage extends BasePage {
+
+    private static final String ARIA_INVALID = "aria-invalid";
+    private static final String ERROR_CSS_CLASS = "is-invalid";
 
     @FindBy(id = "signup")
     private WebElement signupCard;
@@ -28,7 +30,6 @@ public class NewsletterSignupPage extends BasePage {
     @FindBy(id = "email")
     private WebElement emailInput;
 
-    // The button has no id, so we locate it by its position inside the form
     @FindBy(id = "subscribe-btn")
     private WebElement subscribeButton;
 
@@ -39,7 +40,8 @@ public class NewsletterSignupPage extends BasePage {
         super(driver);
     }
 
-    /** Navigates to the app and waits until the form is visible. */
+    // ---------------------------------------------------------------- navigation
+
     public NewsletterSignupPage open() {
         log.info("Opening {}", Config.baseUrl());
         driver.get(Config.baseUrl());
@@ -47,19 +49,19 @@ public class NewsletterSignupPage extends BasePage {
     }
 
     public NewsletterSignupPage waitUntilLoaded() {
-        wait.until(ExpectedConditions.visibilityOf(signupCard));
+        waitUntilVisible(signupCard);
         return this;
     }
 
-    // ---------- actions ----------
+    // ---------------------------------------------------------------- user actions
 
     public NewsletterSignupPage enterEmail(String email) {
-        log.info("Typing email: '{}'", email);
+        log.info("Typing email '{}'", email);
         type(emailInput, email);
         return this;
     }
 
-    /** Presses TAB to leave the field – the app validates on "blur". */
+    /** Presses TAB to move focus out of the field; the app validates on blur. */
     public NewsletterSignupPage leaveEmailField() {
         log.info("Pressing TAB to leave the email field");
         emailInput.sendKeys(Keys.TAB);
@@ -71,61 +73,75 @@ public class NewsletterSignupPage extends BasePage {
         click(subscribeButton);
     }
 
-    /** Happy path: valid email -> success message. */
+    public void pressEnterInEmailField() {
+        log.info("Pressing ENTER in the email field");
+        emailInput.sendKeys(Keys.ENTER);
+    }
+
+    /** Happy path: valid e-mail + click Subscribe, then wait for the success message. */
     public SuccessPage subscribeWith(String email) {
         enterEmail(email);
         clickSubscribe();
         return new SuccessPage(driver).waitUntilLoaded();
     }
 
-    /** Negative path: invalid email -> stay on the form; wait until the field is flagged invalid. */
+    /** Keyboard-only path: valid e-mail + ENTER, then wait for the success message. */
+    public SuccessPage subscribeWithEnterKey(String email) {
+        enterEmail(email);
+        pressEnterInEmailField();
+        return new SuccessPage(driver).waitUntilLoaded();
+    }
+
+    /** Negative path: submit, then wait until the field is flagged invalid. */
     public NewsletterSignupPage submitInvalidEmail(String email) {
         enterEmail(email);
         clickSubscribe();
         return waitForErrorState();
     }
 
+    // ---------------------------------------------------------------- explicit waits for state changes
+
     public NewsletterSignupPage waitForErrorState() {
-        wait.until(ExpectedConditions.attributeToBe(emailInput, "aria-invalid", "true"));
+        waitForAttribute(emailInput, ARIA_INVALID, "true");
         return this;
     }
 
     public NewsletterSignupPage waitForErrorCleared() {
-        wait.until(ExpectedConditions.attributeToBe(emailInput, "aria-invalid", "false"));
+        waitForAttribute(emailInput, ARIA_INVALID, "false");
         return this;
     }
 
-    // ---------- state readers used by the assertions ----------
+    // ---------------------------------------------------------------- page state (read by assertions)
 
     public boolean isDisplayed() {
         return isVisible(signupCard);
     }
 
     public String getHeading() {
-        return textOf(heading);
+        return visibleText(heading);
     }
 
     public int getBenefitCount() {
         return benefits.size();
     }
 
-    public String getSubscribeButtonText() {
-        return textOf(subscribeButton);
-    }
-
     public boolean isEmailInputDisplayed() {
         return isVisible(emailInput);
-    }
-
-    public String getEmailValue() {
-        return emailInput.getDomProperty("value");
     }
 
     public String getEmailPlaceholder() {
         return emailInput.getDomAttribute("placeholder");
     }
 
-    /** The app injects the error text into an always-present span, so "shown" = "has text". */
+    public String getEmailValue() {
+        return emailInput.getDomProperty("value");
+    }
+
+    public String getSubscribeButtonText() {
+        return visibleText(subscribeButton);
+    }
+
+    /** The app writes the message into an always-present span, so "shown" means "has text". */
     public String getErrorMessage() {
         return emailError.getText().trim();
     }
@@ -135,17 +151,15 @@ public class NewsletterSignupPage extends BasePage {
     }
 
     public boolean isEmailMarkedInvalid() {
-        return "true".equals(emailInput.getDomAttribute("aria-invalid"));
+        return "true".equals(emailInput.getDomAttribute(ARIA_INVALID));
     }
 
-    /** The red error styling is applied with the CSS class "is-invalid". */
     public boolean hasErrorStyling() {
         String classes = emailInput.getDomAttribute("class");
-        return classes != null && classes.contains("is-invalid");
+        return classes != null && classes.contains(ERROR_CSS_CLASS);
     }
 
-    /** True if keyboard focus is on the email field (the app refocuses it after a failed submit). */
     public boolean isEmailFieldFocused() {
-        return emailInput.equals(driver.switchTo().activeElement());
+        return hasFocus(emailInput);
     }
 }

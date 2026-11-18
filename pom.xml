@@ -21,10 +21,8 @@
         <slf4j.version>2.0.17</slf4j.version>
         <surefire.version>3.5.3</surefire.version>
 
-        <!-- Defaults that can be overridden from the command line, e.g. -Dheadless=false -->
-        <headless>true</headless>
-        <baseUrl></baseUrl>
-        <browser>chrome</browser>
+        <!-- Test settings (baseUrl, headless, ...) live in src/test/resources/config.properties.
+             Surefire forwards -D options from the command line, e.g. mvn test -Dheadless=false -->
     </properties>
 
     <dependencyManagement>
@@ -76,15 +74,20 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.14.0</version>
+                <configuration>
+                    <!-- Show all compiler warnings (deprecated Selenium API, unchecked casts, ...) to keep code clean -->
+                    <compilerArgs>
+                        <arg>-Xlint:all</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire.version}</version>
                 <configuration>
-                    <!-- Pass settings into the JVM that runs the tests -->
-                    <systemPropertyVariables>
-                        <headless>${headless}</headless>
-                        <baseUrl>${baseUrl}</baseUrl>
-                        <browser>${browser}</browser>
-                    </systemPropertyVariables>
                     <!-- Full stack traces + output in the console, so CI logs are detailed -->
                     <trimStackTrace>false</trimStackTrace>
                     <redirectTestOutputToFile>false</redirectTestOutputToFile>
