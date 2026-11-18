@@ -5,7 +5,6 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
-import org.openqa.selenium.support.How;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.util.List;
@@ -30,7 +29,7 @@ public class NewsletterSignupPage extends BasePage {
     private WebElement emailInput;
 
     // The button has no id, so we locate it by its position inside the form
-    @FindBy(how = How.CSS, using = "#signup-form button[type='submit']")
+    @FindBy(id = "subscribe-btn")
     private WebElement subscribeButton;
 
     @FindBy(id = "email-error")
